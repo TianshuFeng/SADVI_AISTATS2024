@@ -305,68 +305,6 @@ class BVAE(nn.Module):
                 current = movement
         return states[burn_in:]
     
-    # def burn_in_loss(self, x):
-    #     T=1
-    #     batch_size = x.shape[0]
-    #     x = x.expand(T, batch_size, -1)
-        
-    #     prior = MultivariateNormal(loc = torch.zeros(self.z_dim, 
-    #                                                  device = self.device),
-    #                                scale_tril=torch.eye(self.z_dim, 
-    #                                                     device = self.device))
-        
-    #     z_sample = prior.rsample([batch_size])  # type: ignore # batch X z_dim
-    #     z_sample = z_sample.expand(T, batch_size, -1)   # 1 X batch X z_dim
-        
-    #     recon_basis, recon_basis_var = self.decoder(z_sample)  # 1 X Batch X xdim
-        
-    #     # Find p(x|z)
-    #     std_dec = recon_basis_var.mul(0.5).exp_()
-    #     px_Gz = Normal(loc=recon_basis, scale=std_dec).log_prob(x)  # 1 X batch_size X x_dim
-    #     log_PxGz = torch.sum(px_Gz, -1)  # T X batch_size
-    #     log_PxGz = log_PxGz.squeeze()  # Batch size
-        
-    #     # Find q(z|x)
-    #     latent_vars = self.encoder(x) # 1 X batch X z_dim X n_basis
-    #     mu = latent_vars[..., 0]
-    #     log_var = latent_vars[..., 1]  # batch X z_dim
-    #     std_dec = log_var.mul(0.5).exp_()
-        
-    #     latent_vars = latent_vars[..., 2:]
-    #     coef_spl, weights = self.latent_scaling(latent_vars=latent_vars) # 1 X batch * z_dim * n_basis
-                
-    #     pdf_spl = []
-    #     for ind_basis in range(self.n_spl_basis):
-    #         pdf_spl_tmp = self.basis_func[ind_basis](z_sample.cpu().numpy())/self.basis_integral[ind_basis] # 1 X batch X z_dim
-    #         pdf_spl.append(pdf_spl_tmp)
-        
-    #     pdf_spl = torch.tensor(np.stack(pdf_spl, axis = -1), 
-    #                            device = self.device)   # 1 X batch X z_dim X n_basis
-        
-    #     pdf_approx = (coef_spl * pdf_spl).sum(-1)  # 1 X batch X z_dim
-    #     log_QzGx = torch.log(pdf_approx).sum(-1)  # T X Batch
-        
-    #     loss = -torch.mean(log_QzGx + log_PxGz)
-        
-    #     return loss
-    
-    # def burn_in(self, data_loader):
-    #     self.train()
-    #     optimizer = optim.Adam(self.parameters())
-        
-    #     train_loss = 0
-    #     for batch_idx, (data, _) in tqdm.tqdm(enumerate(data_loader), 
-    #                                           total = len(data_loader)):
-    #         if self.mnist_transform:
-    #             data = data.to(self.device).view(-1, 784)
-    #         optimizer.zero_grad()
-
-    #         loss = self.burn_in_loss(data)
-
-    #         loss.backward()
-    #         train_loss += loss.item()
-    #         optimizer.step()
-    
     def train_model(self, train_loader, optimizer, epoch, 
               T = 1, coef_entropy_penalty = 10, coef_spline_penalty=0.1 ,beta = 0.05,
                    temperature = 0.1):
